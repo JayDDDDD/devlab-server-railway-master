@@ -2,12 +2,13 @@ import { db } from "../../admin/admin";
 import { Request, Response } from "express";
 
 export const addLesson = async (req: Request, res: Response) => {
-  const { category, title }: { category: string; title: string } = req.body;
+  const { category, lessonTitle, levelTitle }: 
+    { category: string; lessonTitle: string; levelTitle: string } = req.body;
 
   // Validate required fields
-  if (!category || !title) {
+  if (!category || !lessonTitle || !levelTitle) {
     return res.status(400).json({
-      message: "Both 'category' and 'title' are required.",
+      message: "Category, Lesson Title, and Level Title are required.",
     });
   }
 
@@ -29,17 +30,17 @@ export const addLesson = async (req: Request, res: Response) => {
     // Create main Lesson document
     batch.set(db.collection(category).doc(newLessonId), {
       Lesson: nextNumber,
-      title: title, // <-- Save inputted title
+      title: lessonTitle, // <-- Use lessonTitle from frontend
       createdAt: new Date(),
     });
 
-    // Create Level1 template
+    // Create Level1 template with Level Title from frontend
     batch.set(
       db.collection(category).doc(newLessonId).collection("Levels").doc("Level1"),
       {
         lesson: 1,
         description: "This is a newly added level, feel free to edit this!",
-        title: "This is a template!",
+        title: levelTitle, // <-- Use levelTitle from frontend
         expReward: 1,
         coinsReward: 1,
         levelOrder: 1,
@@ -74,6 +75,7 @@ export const addLesson = async (req: Request, res: Response) => {
       lessonId: newLessonId,
     });
   } catch (error) {
-    return res.status(500).json({ message: error });
+    console.error("addLesson ERROR:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
